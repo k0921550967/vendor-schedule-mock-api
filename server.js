@@ -212,22 +212,16 @@ function futureISO(minDays, maxDays) {
 }
 
 function generateRecord() {
-  // 每堂課可有 1-3 個開課單位聯合主辦
-  const vendorCount = randomInt(1, 3);
-  const selectedVendors = pickSample(VENDORS, vendorCount);
-  const primaryVendor = selectedVendors[0];
+  const vendor = pickRandom(VENDORS);
 
   return {
     id: uuid(),
     class_id: uuid(),
     class_name: pickRandom(CLASS_NAMES),
-    school_names: selectedVendors.map(v => v.name),
-    venue: primaryVendor.venue,
-    schedule_address: primaryVendor.address,
-    address_confirmed: primaryVendor.confirmed,
+    school_name: vendor.name,
+    schedule_address: vendor.address,
     start_hour: futureISO(1, 60),
     duration: pickRandom(DURATIONS),
-    // 每堂課有 1-3 位老師
     teachers: pickSample(TEACHER_NAMES, randomInt(1, 3)),
     student_count: randomInt(0, 40)
   };
@@ -297,7 +291,7 @@ app.get('/api/v1/schedule/vendor', (req, res) => {
       return res.status(400).json({ error: 'count 必須為非負整數' });
     }
   } else {
-    total = randomInt(5, 15);
+    total = randomInt(15, 25);
   }
 
   const data = distributeRecords(total, targetCategories);
