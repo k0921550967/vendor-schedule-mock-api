@@ -8,34 +8,180 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// ── 繁體中文詞庫 ──────────────────────────────────────────────
-const VOCAB = {
-  classNames: [
-    '工業安全衛生實務', '精密加工技術入門', '自動化設備操作', '品質管制與檢驗',
-    '電氣控制基礎', '機械製圖與讀圖', '焊接技術應用', 'CNC 程式設計',
-    '倉儲物流管理', 'ISO 9001 內部稽核'
-  ],
-  schoolNames: [
-    '台北市職業訓練中心', '桃園技術學院推廣部', '台中工業技術協會',
-    '高雄市勞工局訓練所', '新北市技能發展中心', '台南產業人才培訓中心',
-    '彰化縣職業技能研習所', '台灣製造業發展協會', '中部工業人才培訓中心',
-    '北區人力資源開發中心'
-  ],
-  addresses: [
-    '台北市大同區承德路三段 287 號', '新北市板橋區文化路一段 188 號',
-    '桃園市桃園區中正路 512 號', '台中市西屯區工業區三十路 8 號',
-    '台南市仁德區文華路一段 201 號', '高雄市前鎮區中山二路 36 號',
-    '彰化縣彰化市中興路 145 號', '新竹市東區光復路二段 101 號',
-    '苗栗縣頭份市中正路 320 號', '嘉義市東區吳鳳北路 56 號'
-  ],
-  teacherNames: [
-    '林志明', '陳美華', '張建國', '王雅婷', '李俊賢',
-    '吳淑芬', '黃文宏', '劉素珍', '蔡志偉', '許雅萍',
-    '鄭國輝', '洪美玲'
-  ]
-};
+// ── 開課單位資料（序號 1-10 已確認地點；11-24 暫時模擬）────────
+const VENDORS = [
+  // ── 已確認 ──────────────────────────────────────────────────
+  {
+    name: '銘傳大學',
+    venue: '銘傳大學會計系（台北校區/基河校區）',
+    address: '台北市士林區中山北路五段250號',
+    confirmed: true
+  },
+  {
+    name: '健行科技大學',
+    venue: '健行科技大學財務金融系A520數位金融實驗教室',
+    address: '桃園市中壢區健行路229號',
+    confirmed: true
+  },
+  {
+    name: '國立東華大學',
+    venue: '國立東華大學管理學院',
+    address: '花蓮縣壽豐鄉大學路二段1號',
+    confirmed: true
+  },
+  {
+    name: '逢甲大學',
+    venue: '逢甲大學商學院301教室（電腦教室）',
+    address: '臺中市西屯區文華路100號',
+    confirmed: true
+  },
+  {
+    name: '國立中興大學',
+    venue: '國立中興大學社管大樓（管理學院）',
+    address: '臺中市南區興大路145號',
+    confirmed: true
+  },
+  {
+    name: '靜宜大學',
+    venue: '靜宜大學國際企業學系',
+    address: '臺中市沙鹿區臺灣大道7段200號',
+    confirmed: true
+  },
+  {
+    name: '台中市電腦商業同業公會',
+    venue: '台中市電腦商業同業公會（昌平路）',
+    address: '臺中市北屯區昌平路一段95之8號9樓',
+    confirmed: true
+  },
+  {
+    name: '國立高雄科技大學',
+    venue: '國立高雄科技大學（第一校區）產學營運處',
+    address: '高雄市楠梓區卓越路2號',
+    confirmed: true
+  },
+  {
+    name: '國立屏東大學',
+    venue: '國立屏東大學國際經營與貿易學系',
+    address: '屏東市民生東路51號',
+    confirmed: true
+  },
+  {
+    name: '高雄市電腦商業同業公會',
+    venue: '高雄市電腦商業同業公會',
+    address: '高雄市左營區重信路196號',
+    confirmed: true
+  },
+  // ── 暫時模擬地點 ────────────────────────────────────────────
+  {
+    name: '台北市進出口商業同業公會',
+    venue: '台北市進出口商業同業公會會議室',
+    address: '台北市中正區忠孝西路一段36號',
+    confirmed: false
+  },
+  {
+    name: '社團法人台灣電子商務暨創業聯誼協會',
+    venue: '台灣電子商務暨創業聯誼協會研討室',
+    address: '台北市大安區復興南路一段390號',
+    confirmed: false
+  },
+  {
+    name: '財團法人中華飲食文化基金會',
+    venue: '中華飲食文化基金會多功能教室',
+    address: '台北市中山區松江路225號',
+    confirmed: false
+  },
+  {
+    name: '中華民國進出口商業同業公會全國聯合會',
+    venue: '全聯會會議中心',
+    address: '台北市中正區羅斯福路二段100號',
+    confirmed: false
+  },
+  {
+    name: '台灣區照明燈具輸出業同業公會',
+    venue: '照明燈具公會研習室',
+    address: '台北市大同區延平北路二段83號',
+    confirmed: false
+  },
+  {
+    name: '臺灣區不織布工業同業公會',
+    venue: '不織布公會教育訓練教室',
+    address: '台北市萬華區康定路311號',
+    confirmed: false
+  },
+  {
+    name: '台灣針織工業同業公會',
+    venue: '針織公會教育訓練中心',
+    address: '台北市中山區南京東路三段301號',
+    confirmed: false
+  },
+  {
+    name: '台灣織襪工業同業公會',
+    venue: '織襪公會多功能教室',
+    address: '台中市南屯區工業區一路200號',
+    confirmed: false
+  },
+  {
+    name: '台灣塑膠製品工業同業公會',
+    venue: '塑膠公會研習教室',
+    address: '台北市信義區基隆路一段432號',
+    confirmed: false
+  },
+  {
+    name: '台灣區電機電子工業同業公會',
+    venue: '電電公會訓練中心',
+    address: '台北市內湖區民權東路六段109號',
+    confirmed: false
+  },
+  {
+    name: '台灣全國觀光暨商圈聯盟總會',
+    venue: '觀光聯盟多媒體教室',
+    address: '台北市中正區北平東路30號',
+    confirmed: false
+  },
+  {
+    name: '台中市中小企業協會',
+    venue: '台中市中小企業協會會議室',
+    address: '台中市西區五權路2號',
+    confirmed: false
+  },
+  {
+    name: '台灣工具機暨零組件工業同業公會',
+    venue: '工具機公會訓練教室',
+    address: '台中市西屯區工業區二路68號',
+    confirmed: false
+  },
+  {
+    name: '彰化縣工業會',
+    venue: '彰化縣工業會教育訓練中心',
+    address: '彰化縣彰化市中山路二段88號',
+    confirmed: false
+  }
+];
 
-const CATEGORIES = ['製造業初階', '製造業中階', '服務業初階', '服務業中階'];
+// ── AI 財務相關課程名稱 ─────────────────────────────────────────
+const CLASS_NAMES = [
+  'AI財務分析工具應用入門',
+  'ChatGPT輔助財務報表解讀實務',
+  '生成式AI在財務預測的應用',
+  'AI驅動的供應鏈成本控制',
+  '數位帳務自動化與AI工具整合',
+  'AI財務風險管理與智慧預警',
+  'Copilot輔助財務建模與試算',
+  '餐飲業AI收益管理與財務優化',
+  '旅宿業智慧定價與AI財務分析',
+  '觀光業AI輔助預算規劃實務',
+  'AI工具於中小企業財務管理應用',
+  '製造業智慧化成本核算與AI輔助'
+];
+
+// ── 師資名單 ────────────────────────────────────────────────────
+const TEACHER_NAMES = [
+  '林志明', '陳美華', '張建國', '王雅婷', '李俊賢',
+  '吳淑芬', '黃文宏', '劉素珍', '蔡志偉', '許雅萍',
+  '鄭國輝', '洪美玲'
+];
+
+const CATEGORIES = ['製造業初階', '製造業中階', '服務業初階', '服務業中階(住宿/餐飲/旅遊)'];
 const DURATIONS = [3, 4, 6];
 
 // ── 工具函式 ──────────────────────────────────────────────────
@@ -53,7 +199,7 @@ function pickRandom(arr) {
 
 function pickSample(arr, n) {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, n);
+  return shuffled.slice(0, Math.min(n, arr.length));
 }
 
 function futureISO(minDays, maxDays) {
@@ -66,22 +212,29 @@ function futureISO(minDays, maxDays) {
 }
 
 function generateRecord() {
+  // 每堂課可有 1-3 個開課單位聯合主辦
+  const vendorCount = randomInt(1, 3);
+  const selectedVendors = pickSample(VENDORS, vendorCount);
+  const primaryVendor = selectedVendors[0];
+
   return {
     id: uuid(),
     class_id: uuid(),
-    class_name: pickRandom(VOCAB.classNames),
-    school_name: pickRandom(VOCAB.schoolNames),
-    schedule_address: pickRandom(VOCAB.addresses),
+    class_name: pickRandom(CLASS_NAMES),
+    school_names: selectedVendors.map(v => v.name),
+    venue: primaryVendor.venue,
+    schedule_address: primaryVendor.address,
+    address_confirmed: primaryVendor.confirmed,
     start_hour: futureISO(1, 60),
     duration: pickRandom(DURATIONS),
-    teachers: pickSample(VOCAB.teacherNames, randomInt(0, 2)),
+    // 每堂課有 1-3 位老師
+    teachers: pickSample(TEACHER_NAMES, randomInt(1, 3)),
     student_count: randomInt(0, 40)
   };
 }
 
 /**
- * 將 total 筆資料隨機分配到 4 個 category，
- * 保證每個 category 至少 0 筆（不強迫 >=1）。
+ * 將 total 筆資料隨機分配到各 category。
  */
 function distributeRecords(total, targetCategories) {
   const result = Object.fromEntries(CATEGORIES.map(c => [c, []]));
@@ -105,21 +258,27 @@ app.get('/health', (req, res) => {
   });
 });
 
+// 開課單位列表
+app.get('/api/v1/vendors', (req, res) => {
+  const { confirmed } = req.query;
+  let list = VENDORS;
+  if (confirmed === 'true') list = VENDORS.filter(v => v.confirmed);
+  if (confirmed === 'false') list = VENDORS.filter(v => !v.confirmed);
+  res.json({ total: list.length, vendors: list });
+});
+
 // 主要端點
 app.get('/api/v1/schedule/vendor', (req, res) => {
   const { count, category, mode } = req.query;
 
-  // mode=error
   if (mode === 'error') {
     return res.status(500).json({ error: 'Internal Server Error (mock)' });
   }
 
-  // mode=empty
   if (mode === 'empty') {
     return res.json(Object.fromEntries(CATEGORIES.map(c => [c, []])));
   }
 
-  // category 過濾
   let targetCategories = CATEGORIES;
   if (category) {
     const requested = category.split(',').map(s => s.trim());
@@ -131,7 +290,6 @@ app.get('/api/v1/schedule/vendor', (req, res) => {
     }
   }
 
-  // 總筆數
   let total;
   if (count !== undefined) {
     total = parseInt(count, 10);
@@ -144,13 +302,10 @@ app.get('/api/v1/schedule/vendor', (req, res) => {
 
   const data = distributeRecords(total, targetCategories);
 
-  // 若有指定 category，只回傳指定的 key
   if (category) {
-    const filtered = Object.fromEntries(
-      targetCategories.map(c => [c, data[c]])
+    const full = Object.fromEntries(
+      CATEGORIES.map(c => [c, targetCategories.includes(c) ? data[c] : []])
     );
-    // 補上未請求的 category 為空陣列（維持固定結構）
-    const full = Object.fromEntries(CATEGORIES.map(c => [c, filtered[c] ?? []]));
     return res.json(full);
   }
 
