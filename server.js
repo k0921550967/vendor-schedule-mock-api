@@ -181,8 +181,27 @@ const TEACHER_NAMES = [
   '鄭國輝', '洪美玲'
 ];
 
-const CATEGORIES = ['製造業初階', '製造業中階', '服務業初階', '服務業中階(住宿/餐飲/旅遊)', '服務業中階(批發/零售)'];
-const DURATIONS = [3, 4, 6];
+// 外層 key，固定 5 種
+const CATEGORIES = [
+  '製造業初階',
+  '製造業中階',
+  '服務業初階',
+  '服務業中階(住宿/餐飲/旅遊)',
+  '服務業中階(批發/零售)'
+];
+
+// 每個類別的班別數量，可依需求調整（用於 class_name）
+const BATCHES_PER_CATEGORY = 5;
+
+// class_name 用的班別標籤，依類別分組
+const CLASS_LABELS = Object.fromEntries(
+  CATEGORIES.map(cat => [
+    cat,
+    Array.from({ length: BATCHES_PER_CATEGORY }, (_, i) => `${cat}第${i + 1}班`)
+  ])
+);
+
+const DURATIONS = [2, 4, 8];
 
 // ── 工具函式 ──────────────────────────────────────────────────
 function uuid() {
@@ -202,7 +221,9 @@ function pickSample(arr, n) {
   return shuffled.slice(0, Math.min(n, arr.length));
 }
 
-function futureISO(minDays, maxDays) {
+// minDays 可為負數（代表過去），maxDays 為未來天數
+// 預設：最早 30 天前（-30），最晚 60 天後（+90）
+function dateISO(minDays = -30, maxDays = 90) {
   const days = randomInt(minDays, maxDays);
   const hours = randomInt(8, 18);
   const d = new Date();
@@ -211,16 +232,16 @@ function futureISO(minDays, maxDays) {
   return d.toISOString();
 }
 
-function generateRecord() {
+function generateRecord(category) {
   const vendor = pickRandom(VENDORS);
 
   return {
     id: uuid(),
     class_id: uuid(),
-    class_name: pickRandom(CLASS_NAMES),
+    class_name: pickRandom(CLASS_LABELS[category]),
     school_name: vendor.name,
     schedule_address: vendor.address,
-    start_hour: futureISO(1, 60),
+    start_hour: dateISO(-30, 60),
     duration: pickRandom(DURATIONS),
     teachers: pickSample(TEACHER_NAMES, randomInt(1, 3)),
     student_count: randomInt(0, 40)
@@ -235,7 +256,7 @@ function distributeRecords(total, targetCategories) {
 
   for (let i = 0; i < total; i++) {
     const cat = pickRandom(targetCategories);
-    result[cat].push(generateRecord());
+    result[cat].push(generateRecord(cat));
   }
 
   return result;
@@ -291,7 +312,7 @@ app.get('/api/v1/schedule/vendor', (req, res) => {
       return res.status(400).json({ error: 'count 必須為非負整數' });
     }
   } else {
-    total = randomInt(15, 25);
+    total = randomInt(20, 30);
   }
 
   const data = distributeRecords(total, targetCategories);
