@@ -190,16 +190,6 @@ const CATEGORIES = [
   '服務業中階(批發/零售)'
 ];
 
-// 每個類別的班別數量，可依需求調整（用於 class_name）
-const BATCHES_PER_CATEGORY = 5;
-
-// class_name 用的班別標籤，依類別分組
-const CLASS_LABELS = Object.fromEntries(
-  CATEGORIES.map(cat => [
-    cat,
-    Array.from({ length: BATCHES_PER_CATEGORY }, (_, i) => `${cat}第${i + 1}班`)
-  ])
-);
 
 const DURATIONS = [2, 4, 8];
 
@@ -232,13 +222,14 @@ function dateISO(minDays = -30, maxDays = 90) {
   return d.toISOString();
 }
 
-function generateRecord(category) {
+// class_name 在分配後才決定，這裡先不填
+function generateRecord() {
   const vendor = pickRandom(VENDORS);
 
   return {
     id: uuid(),
     class_id: uuid(),
-    class_name: pickRandom(CLASS_LABELS[category]),
+    class_name: '',
     school_name: vendor.name,
     schedule_address: vendor.address,
     start_hour: dateISO(-30, 60),
@@ -249,14 +240,23 @@ function generateRecord(category) {
 }
 
 /**
- * 將 total 筆資料隨機分配到各 category。
+ * 將 total 筆資料隨機分配到各 category，
+ * 再依 start_hour 排序後依序命名第1班、第2班…
  */
 function distributeRecords(total, targetCategories) {
   const result = Object.fromEntries(CATEGORIES.map(c => [c, []]));
 
   for (let i = 0; i < total; i++) {
     const cat = pickRandom(targetCategories);
-    result[cat].push(generateRecord(cat));
+    result[cat].push(generateRecord());
+  }
+
+  // 排序後按時間順序補上 class_name
+  for (const cat of CATEGORIES) {
+    result[cat].sort((a, b) => new Date(a.start_hour) - new Date(b.start_hour));
+    result[cat].forEach((record, idx) => {
+      record.class_name = `${cat}第${idx + 1}班`;
+    });
   }
 
   return result;
